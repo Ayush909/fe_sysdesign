@@ -36,10 +36,49 @@ server.addService(customersProto.CustomerService.service, {
       });
     }
   },
-  InsertCustomer: (call, callback) => {},
-  UpdateCustomer: (call, callback) => {},
-  DeleteCustomer: (call, callback) => {},
+  InsertCustomer: (call, callback) => {
+    const newCustomer = call.request;
+    newCustomer.id = String(customers.length + 1); // Simple ID generation
+    customers.push(newCustomer);
+    callback(null, newCustomer);
+  },
+  UpdateCustomer: (call, callback) => {
+    const updatedCustomer = call.request;
+    const index = customers.findIndex((c) => c.id === updatedCustomer.id);
+    if (index !== -1) {
+      customers[index].name = updatedCustomer.name;
+      customers[index].address = updatedCustomer.address;
+      callback(null, customers[index]);
+    } else {
+      callback({
+        code: grpc.status.NOT_FOUND,
+        details: "Customer not found",
+      });
+    }
+  },
+  DeleteCustomer: (call, callback) => {
+    const index = customers.findIndex((c) => c.id === call.request.id);
+    if (index !== -1) {
+      customers.splice(index, 1);
+      callback(null, { success: true });
+    } else {
+      callback({
+        code: grpc.status.NOT_FOUND,
+        details: "Customer not found",
+      });
+    }
+  },
 });
 
-server.bind("127.0.0.1:30043", grpc.ServerCredentials.createInsecure());
-server.start();
+server.bindAsync(
+  "127.0.0.1:30043",
+  grpc.ServerCredentials.createInsecure(),
+  (err, port) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    server.start();
+    console.log(`Server running at ${port}`);
+  }
+);
