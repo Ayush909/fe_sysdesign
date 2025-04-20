@@ -21,6 +21,20 @@ app.get("/", (req, res) => {
 
 app.post("/create", (req, res) => {
   // Handle customer creation
+  let newCustomer = {
+    name: req.body.name,
+    age: req.body.age,
+    address: req.body.address,
+  };
+
+  client.InsertCustomer(newCustomer, (err, data) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send("Error creating customer");
+    }
+    console.log("Customer created successfully:", data);
+    res.send(data);
+  });
 });
 
 const PORT = process.env.PORT || 3000;
